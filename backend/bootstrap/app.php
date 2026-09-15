@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->trustProxies(at: '*');
+        $middleware->prepend(\App\Http\Middleware\AuthenticateWithTokenQuery::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

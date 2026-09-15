@@ -687,10 +687,9 @@ function statusLabel(status) {
                 <!-- Logo -->
                 <button
                     type="button"
-                    @click="
-                        emit('new-project')
-                    "
-                    class="flex items-center gap-3"
+                    @click="emit('new-project')"
+                    class="group flex cursor-pointer items-center gap-3 transition hover:opacity-85"
+                    title="Return to Dashboard / New Project"
                 >
                     <div
                         class="flex h-9 w-9 items-center justify-center rounded-xl border border-cyan-300/20 bg-cyan-400/10"
@@ -788,15 +787,12 @@ function statusLabel(status) {
 
                     <button
                         type="button"
-                        @click="
-                            emit(
-                                'new-project'
-                            )
-                        "
-                        class="mt-3 flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-white/5 px-3 py-3 text-left text-sm transition hover:bg-white/10"
+                        @click="emit('new-project')"
+                        class="mt-3 flex w-full cursor-pointer items-center gap-3 rounded-2xl border border-white/5 bg-white/5 px-3 py-3 text-left text-sm transition hover:border-cyan-400/30 hover:bg-white/10"
+                        title="Create a new subtitle project"
                     >
                         <span
-                            class="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-400/10 text-lg text-cyan-300"
+                            class="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-400/10 text-lg text-cyan-300 transition group-hover:scale-105"
                         >
                             +
                         </span>
@@ -1755,22 +1751,16 @@ function statusLabel(status) {
             >
                 <button
                     type="button"
-                    @click="
-                        emit(
-                            'new-project'
-                        )
-                    "
-                    class="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-xs"
+                    @click="emit('new-project')"
+                    class="flex-1 cursor-pointer rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-xs transition hover:bg-white/10"
                 >
                     New Project
                 </button>
 
                 <button
                     type="button"
-                    @click="
-                        emit('logout')
-                    "
-                    class="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-xs text-white/60"
+                    @click="emit('logout')"
+                    class="cursor-pointer rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-xs text-white/60 transition hover:bg-white/10 hover:text-white"
                 >
                     Logout
                 </button>

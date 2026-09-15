@@ -571,6 +571,14 @@ function createNewProject() {
     success.value = '';
 
     showUploader.value = true;
+
+    if (typeof window !== 'undefined' && window.history?.pushState) {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('job')) {
+            url.searchParams.delete('job');
+            window.history.pushState({}, '', url.pathname);
+        }
+    }
 }
 
 /*
@@ -625,17 +633,12 @@ async function logout(redirect = true) {
 */
 
 const videoUrl = computed(() => {
-    if (!job.value?.file_path) {
-        return '';
-    }
-
-    const videoUrl = computed(() => {
     if (!job.value?.id) {
         return '';
     }
 
-    return `/api/subtitle-jobs/${job.value.id}/media`;
-});
+    const token = localStorage.getItem('auth_token');
+    return `/api/subtitle-jobs/${job.value.id}/media` + (token ? `?token=${encodeURIComponent(token)}` : '');
 });
 
 /*
@@ -902,6 +905,13 @@ function stopPolling() {
                                 class="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none focus:border-indigo-400/50"
                             >
                                 <option
+                                    value="base"
+                                    class="bg-[#101522]"
+                                >
+                                    Base — Fast
+                                </option>
+
+                                <option
                                     value="small"
                                     class="bg-[#101522]"
                                 >
@@ -1053,9 +1063,9 @@ function stopPolling() {
                 @download="downloadSrt"
                 @add-subtitle="addSubtitle"
                 @delete-subtitle="deleteSubtitle"
-                @duplicate-subtitle="
-                    duplicateSubtitle
-                "
+                @duplicate-subtitle="duplicateSubtitle"
+                @new-project="createNewProject"
+                @logout="logout"
             />
         </div>
     </div>

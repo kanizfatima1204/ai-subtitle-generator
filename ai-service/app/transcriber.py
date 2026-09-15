@@ -28,7 +28,7 @@ class Transcriber:
 
     def __init__(
         self,
-        model_name: str = "medium",
+        model_name: str = "base",
         device: str | None = None,
         compute_type: str | None = None,
     ):
@@ -89,9 +89,16 @@ class Transcriber:
         file_path: str,
         language: str | None,
     ) -> dict[str, Any]:
+        initial_prompt = None
+        if language in ("bn", "mixed"):
+            initial_prompt = "এখানে সম্পূর্ণ প্রমিত বাংলা ভাষায় সাবটাইটেল লেখা হচ্ছে। কোনো রোমান হরফ বা বাংলিশ নয়, শুদ্ধ বাংলা বর্ণমালায়।"
+        elif language is None:
+            initial_prompt = "বাংলা ও ইংরেজি ভাষায় সাবটাইটেল। English and pure Bengali script subtitles."
+
         segments_gen, info = model.transcribe(
             file_path,
             language=language,
+            initial_prompt=initial_prompt,
             word_timestamps=True,
             vad_filter=True,
             vad_parameters=dict(min_silence_duration_ms=500),

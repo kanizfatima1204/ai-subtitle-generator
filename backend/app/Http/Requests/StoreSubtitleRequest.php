@@ -30,7 +30,7 @@ class StoreSubtitleRequest extends FormRequest
             'model' => [
                 'nullable',
                 'string',
-                'in:small,medium,large-v3',
+                'in:tiny,base,small,medium,large,large-v2,large-v3',
             ],
         ];
     }
