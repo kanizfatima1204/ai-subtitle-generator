@@ -102,7 +102,7 @@ async def health():
 async def transcribe(
     file: UploadFile = File(...),
     language: str | None = Form(None),
-    model: str = Form("medium"),
+    model: str = Form("base"),
 ):
 
     extension = (

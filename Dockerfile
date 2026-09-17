@@ -58,9 +58,13 @@ RUN pip install --no-cache-dir --upgrade pip && \
         "uvicorn[standard]" \
         python-multipart \
         faster-whisper \
+        requests \
         pydantic \
         httpx \
         python-dotenv
+
+# Pre-download lightweight models (base & tiny) at build time so runtime has zero download latency and no OOM crashes
+RUN python3 -c "from faster_whisper import WhisperModel; WhisperModel('base', device='cpu', compute_type='int8'); WhisperModel('tiny', device='cpu', compute_type='int8')"
 
 # Copy entire repository into the container
 COPY . /app

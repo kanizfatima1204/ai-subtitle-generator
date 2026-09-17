@@ -137,7 +137,7 @@ class ProcessSubtitleJob implements ShouldQueue
                     $aiServiceUrl.'/transcribe',
                     array_filter([
                         'language' => $language,
-                        'model' => $job->model ?? 'medium',
+                        'model' => $job->model ?? 'base',
                     ], fn ($value) => $value !== null)
                 );
 

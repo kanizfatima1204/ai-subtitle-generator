@@ -98,13 +98,25 @@ class Transcriber:
                 except Exception as ex:
                     logger.warning(f"Failed to load WhisperX, falling back to faster-whisper: {ex}")
 
-            logger.info(f"Loading faster-whisper model '{self.model_name}' on {self.device} ({self.compute_type})...")
-            self.model = WhisperModel(
-                self.model_name,
-                device=self.device,
-                compute_type=self.compute_type,
-            )
-            self.engine = "faster-whisper"
+            try:
+                logger.info(f"Loading faster-whisper model '{self.model_name}' on {self.device} ({self.compute_type})...")
+                self.model = WhisperModel(
+                    self.model_name,
+                    device=self.device,
+                    compute_type=self.compute_type,
+                    cpu_threads=4,
+                )
+                self.engine = "faster-whisper"
+            except Exception as ex:
+                logger.error(f"Failed to load Whisper model '{self.model_name}': {ex}. Falling back to 'base' model.")
+                self.model_name = "base"
+                self.model = WhisperModel(
+                    "base",
+                    device=self.device,
+                    compute_type=self.compute_type,
+                    cpu_threads=4,
+                )
+                self.engine = "faster-whisper"
 
         return self.model
 

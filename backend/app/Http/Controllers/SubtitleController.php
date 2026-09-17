@@ -86,7 +86,7 @@ class SubtitleController extends Controller
 
             'model' =>
                 $request->validated('model')
-                ?? 'medium',
+                ?? 'base',
 
             'file_size' =>
                 $file->getSize(),

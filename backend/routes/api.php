@@ -2,11 +2,26 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SubtitleController;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
-Route::post(
-    '/subtitle-jobs/{subtitleJob}/ai-assist',
-    [SubtitleController::class, 'aiAssist']
-);
+
+Route::get('/health-check', function () {
+    $aiHealth = null;
+    $aiError = null;
+    try {
+        $res = Http::timeout(5)->get('http://127.0.0.1:8001/health');
+        $aiHealth = $res->json();
+    } catch (\Throwable $e) {
+        $aiError = $e->getMessage();
+    }
+
+    return response()->json([
+        'status' => 'ok',
+        'ai_service' => $aiHealth,
+        'ai_error' => $aiError,
+        'timestamp' => now()->toIso8601String(),
+    ]);
+});
 Route::prefix('auth')->group(function () {
     Route::post(
         '/register',

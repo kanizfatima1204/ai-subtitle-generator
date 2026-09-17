@@ -56,10 +56,10 @@ print('Python:', sys.version)
 print('Testing faster_whisper...')
 from faster_whisper import WhisperModel
 print('faster_whisper OK')
-print('Testing fastapi...')
-import fastapi
-print('fastapi OK')
-print('Testing app.main...')
+print('Testing base model load...')
+m = WhisperModel('base', device='cpu', compute_type='int8')
+print('base model OK')
+print('Testing fastapi & app.main...')
 from app.main import app
 print('app.main OK')
 " 2>&1; then

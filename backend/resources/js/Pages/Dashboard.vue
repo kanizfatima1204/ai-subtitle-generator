@@ -23,7 +23,7 @@ const pollTimer = ref(null);
 const showUploader = ref(false);
 
 const selectedLanguage = ref('auto');
-const selectedModel = ref('medium');
+const selectedModel = ref('base');
 
 const user = ref(
     JSON.parse(localStorage.getItem('auth_user') || 'null')
@@ -908,28 +908,28 @@ function stopPolling() {
                                     value="base"
                                     class="bg-[#101522]"
                                 >
-                                    Base — Fast
+                                    Base — Recommended (Fast & Cloud-Optimized)
+                                </option>
+
+                                <option
+                                    value="tiny"
+                                    class="bg-[#101522]"
+                                >
+                                    Tiny — Ultra Fast
                                 </option>
 
                                 <option
                                     value="small"
                                     class="bg-[#101522]"
                                 >
-                                    Small — Faster
+                                    Small — Higher Accuracy
                                 </option>
 
                                 <option
                                     value="medium"
                                     class="bg-[#101522]"
                                 >
-                                    Medium — Recommended
-                                </option>
-
-                                <option
-                                    value="large-v3"
-                                    class="bg-[#101522]"
-                                >
-                                    Large v3 — Highest Quality
+                                    Medium — High Memory (4GB+ RAM)
                                 </option>
                             </select>
                         </div>
