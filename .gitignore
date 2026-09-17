@@ -1,0 +1,43 @@
+# Executables & Cloudflare
+cloudflared.exe
+*.exe
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+ai-service/venv/
+ai-service/storage/uploads/*
+!ai-service/storage/uploads/.gitkeep
+
+# Sample media files (keep repo clean)
+sample_*.mp3
+sample_*.mp4
+sample_*.wav
+
+# Laravel / Backend
+backend/.env
+backend/vendor/
+backend/node_modules/
+backend/public/storage
+backend/public/hot
+backend/storage/app/public/*
+!backend/storage/app/public/.gitkeep
+backend/storage/framework/cache/data/*
+!backend/storage/framework/cache/data/.gitkeep
+backend/storage/framework/sessions/*
+!backend/storage/framework/sessions/.gitkeep
+backend/storage/framework/views/*
+!backend/storage/framework/views/.gitkeep
+backend/storage/logs/*
+!backend/storage/logs/.gitkeep
+backend/database/database.sqlite
+backend/database/database.sqlite-shm
+backend/database/database.sqlite-wal
+
+# Editor and OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

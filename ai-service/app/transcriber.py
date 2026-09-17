@@ -1,4 +1,5 @@
 import os
+import re
 import logging
 from typing import Any
 
@@ -14,11 +15,51 @@ except ImportError:
 from faster_whisper import WhisperModel
 
 
+def _is_hallucinated(text: str) -> bool:
+    """
+    Detect common Whisper hallucination patterns and return True if the
+    segment should be discarded.
+
+    Patterns caught:
+      1. Single character/syllable repeated 6+ times  (e.g. "রররররররররর")
+      2. Short token (<= 4 chars) that fills > 60 % of the text
+      3. Text is almost entirely punctuation / special chars
+      4. Extremely long word with no spaces (>= 40 chars) — stuck-loop artefact
+    """
+    if not text:
+        return True
+
+    stripped = text.strip()
+
+    # Pattern 1 – a Unicode character (or short cluster) repeated 6+ times
+    if re.search(r'(.{1,3})\1{5,}', stripped):
+        return True
+
+    # Pattern 2 – token repetition: split on whitespace, check most-common token
+    tokens = stripped.split()
+    if len(tokens) >= 4:
+        from collections import Counter
+        most_common_token, freq = Counter(tokens).most_common(1)[0]
+        if freq / len(tokens) > 0.6:
+            return True
+
+    # Pattern 3 – almost no alphabetic content (only symbols / numbers)
+    alpha_chars = sum(1 for c in stripped if c.isalpha())
+    if len(stripped) > 5 and alpha_chars / len(stripped) < 0.3:
+        return True
+
+    # Pattern 4 – single very long "word" with no spaces (stuck loop)
+    if tokens and max(len(t) for t in tokens) >= 40:
+        return True
+
+    return False
+
+
 class Transcriber:
     """
     High-performance transcription pipeline supporting both faster-whisper
     and whisperx with forced alignment fallback.
-    
+
     Supports:
       - Bengali ('bn')
       - English ('en')
@@ -34,7 +75,7 @@ class Transcriber:
     ):
         self.model_name = model_name
         self.device = device or os.getenv("WHISPER_DEVICE", "cpu")
-        
+
         # CPU default compute_type: int8 / float32
         default_compute = "int8" if self.device == "cpu" else "float16"
         self.compute_type = compute_type or os.getenv("WHISPER_COMPUTE_TYPE", default_compute)
@@ -89,48 +130,88 @@ class Transcriber:
         file_path: str,
         language: str | None,
     ) -> dict[str, Any]:
-        initial_prompt = None
-        if language in ("bn", "mixed"):
-            initial_prompt = "এখানে সম্পূর্ণ প্রমিত বাংলা ভাষায় সাবটাইটেল লেখা হচ্ছে। কোনো রোমান হরফ বা বাংলিশ নয়, শুদ্ধ বাংলা বর্ণমালায়।"
-        elif language is None:
-            initial_prompt = "বাংলা ও ইংরেজি ভাষায় সাবটাইটেল। English and pure Bengali script subtitles."
+        # ── Step 1: Auto-detect language (no prompt — avoids biased detection) ──
+        detected_language = language
+        if not language:
+            _, info = model.transcribe(
+                file_path,
+                language=None,
+                beam_size=5,
+                temperature=0,
+                vad_filter=True,
+                vad_parameters=dict(min_silence_duration_ms=500),
+                condition_on_previous_text=False,
+            )
+            detected_language = info.language or "unknown"
+            logger.info(
+                f"Auto-detected language: {detected_language} "
+                f"(probability={info.language_probability:.2f})"
+            )
 
-        segments_gen, info = model.transcribe(
+        # ── Step 2: Language-appropriate prompt ────────────────────────────────
+        # Only set a prompt when the language is definitively known.
+        # No prompt = no script bias = less hallucination.
+        initial_prompt: str | None = None
+        if detected_language == "bn":
+            initial_prompt = "বাংলা।"          # minimal — just enough to hint script
+        # English, Hindi, etc. need no prompt at all.
+
+        # ── Step 3: Full transcription with anti-hallucination guards ──────────
+        segments_gen, _ = model.transcribe(
             file_path,
-            language=language,
+            language=detected_language if detected_language != "unknown" else None,
             initial_prompt=initial_prompt,
             word_timestamps=True,
             vad_filter=True,
             vad_parameters=dict(min_silence_duration_ms=500),
             beam_size=5,
+            # ── Anti-hallucination ───────────────────────────────────────────
+            temperature=0,                    # deterministic — no random sampling
+            condition_on_previous_text=False, # prevents cascading hallucination
+            no_speech_threshold=0.6,          # drop silent / non-speech windows
+            compression_ratio_threshold=1.8,  # STRICTER: drop repetitive output
+            log_prob_threshold=-1.0,          # drop low-confidence segments
         )
 
-        detected_language = language or info.language or "unknown"
         formatted_segments = []
 
         for seg in segments_gen:
+            text = seg.text.strip()
+            if not text:
+                continue
+
+            # ── Post-processing: drop hallucinated / stuck-loop segments ──────
+            if _is_hallucinated(text):
+                logger.warning(f"Dropped hallucinated segment [{seg.start:.1f}s]: {text[:60]!r}")
+                continue
+
             words = []
             if seg.words:
                 for w in seg.words:
+                    word_text = w.word.strip()
+                    if not word_text:
+                        continue
                     words.append({
-                        "word": w.word.strip(),
+                        "word": word_text,
                         "start": round(w.start, 3),
                         "end": round(w.end, 3),
                         "score": round(w.probability, 3) if hasattr(w, "probability") else 1.0,
                     })
             else:
-                # If no word-level timestamps generated, fallback to segment text
                 words.append({
-                    "word": seg.text.strip(),
+                    "word": text,
                     "start": round(seg.start, 3),
                     "end": round(seg.end, 3),
                     "score": 1.0,
                 })
 
+            if not words:
+                continue
+
             formatted_segments.append({
                 "start": round(seg.start, 3),
                 "end": round(seg.end, 3),
-                "text": seg.text.strip(),
+                "text": text,
                 "words": words,
             })
 
