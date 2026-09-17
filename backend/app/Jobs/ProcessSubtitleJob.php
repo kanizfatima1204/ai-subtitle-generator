@@ -127,7 +127,7 @@ class ProcessSubtitleJob implements ShouldQueue
              */
 
             $response = Http::timeout(3600)
-                ->connectTimeout(30)
+                ->connectTimeout(120)
                 ->attach(
                     'file',
                     fopen($filePath, 'r'),
