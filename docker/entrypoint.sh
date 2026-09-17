@@ -36,9 +36,12 @@ if [ -z "$APP_KEY" ] && ! grep -q "APP_KEY=base64:" .env; then
     php artisan key:generate --force
 fi
 
-# Run database migrations
+# Run database migrations and seed default data
 echo "[Entrypoint] Running database migrations..."
 php artisan migrate --force
+
+echo "[Entrypoint] Running database seeders..."
+php artisan db:seed --force
 
 # Create public storage symlink
 echo "[Entrypoint] Linking public storage..."
