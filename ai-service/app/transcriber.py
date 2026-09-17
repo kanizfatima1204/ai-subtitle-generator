@@ -160,19 +160,15 @@ class Transcriber:
                 f"(probability={info.language_probability:.2f})"
             )
 
-        # ── Step 2: Language-appropriate prompt ────────────────────────────────
-        # Only set a prompt when the language is definitively known.
-        # No prompt = no script bias = less hallucination.
-        initial_prompt: str | None = None
-        if detected_language == "bn":
-            initial_prompt = "বাংলা।"          # minimal — just enough to hint script
-        # English, Hindi, etc. need no prompt at all.
+        # ── Step 2: No initial_prompt — avoids hallucinated loops ──────────────
+        # Setting an initial_prompt for Bengali (e.g. "বাংলা।") causes Whisper
+        # to enter a stuck-repetition loop which is then caught and dropped by
+        # _is_hallucinated(), producing 0 segments. No prompt is the safe default.
 
         # ── Step 3: Full transcription with anti-hallucination guards ──────────
         segments_gen, _ = model.transcribe(
             file_path,
             language=detected_language if detected_language != "unknown" else None,
-            initial_prompt=initial_prompt,
             word_timestamps=True,
             vad_filter=True,
             vad_parameters=dict(min_silence_duration_ms=500),
@@ -181,7 +177,7 @@ class Transcriber:
             temperature=0,                    # deterministic — no random sampling
             condition_on_previous_text=False, # prevents cascading hallucination
             no_speech_threshold=0.6,          # drop silent / non-speech windows
-            compression_ratio_threshold=1.8,  # STRICTER: drop repetitive output
+            compression_ratio_threshold=2.4,  # default — avoids false positives
             log_prob_threshold=-1.0,          # drop low-confidence segments
         )
 
