@@ -51,9 +51,8 @@ WORKDIR /app
 RUN python3 -m venv /app/ai-service-venv
 ENV PATH="/app/ai-service-venv/bin:$PATH"
 
-# Install lightweight CPU PyTorch and faster-whisper dependencies
+# Install Python AI service dependencies (no torch needed - faster-whisper uses ctranslate2)
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir torch torchaudio --index-url https://download.pytorch.org/whl/cpu && \
     pip install --no-cache-dir \
         fastapi \
         "uvicorn[standard]" \
