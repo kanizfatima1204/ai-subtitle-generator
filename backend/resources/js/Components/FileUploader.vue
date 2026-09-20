@@ -60,27 +60,27 @@ function handleDragLeave() {
             :class="[
                 isDragging
                     ? 'border-indigo-400 bg-indigo-500/10 shadow-[0_0_30px_rgba(99,102,241,0.2)]'
-                    : 'border-white/15 bg-white/[0.03] hover:border-white/30 hover:bg-white/[0.05]'
+                    : 'border-violet-300/20 bg-gradient-to-br from-violet-500/[0.06] to-fuchsia-500/[0.03] hover:border-fuchsia-300/40 hover:bg-violet-500/[0.08]'
             ]"
             @dragover.prevent="handleDragOver"
             @dragleave.prevent="handleDragLeave"
             @drop.prevent="handleDrop"
         >
-            <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-500/15 text-indigo-400 ring-1 ring-indigo-500/30">
+            <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/15 text-fuchsia-200 ring-1 ring-fuchsia-300/30 shadow-[0_0_24px_rgba(217,70,239,0.18)]">
                 <svg class="h-8 w-8 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
             </div>
 
             <span class="text-base font-semibold text-white">
-                Drag & drop your video or audio here
+                Drop your story here
             </span>
 
             <span class="mt-1 text-xs text-white/50">
                 Supports MP4, MOV, MKV, MP3, WAV, M4A, FLAC (up to 500MB)
             </span>
 
-            <span class="mt-5 inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-xs font-medium text-white/80 backdrop-blur transition hover:bg-white/20 hover:text-white">
+            <span class="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-violet-900/30 transition hover:brightness-110">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>

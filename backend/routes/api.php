@@ -11,7 +11,7 @@ Route::get('/health-check', function () {
     try {
         $res = Http::timeout(5)->get('http://127.0.0.1:8001/health');
         $aiHealth = $res->json();
-    } catch (\Throwable $e) {
+    } catch (Throwable $e) {
         $aiError = $e->getMessage();
     }
 
@@ -77,6 +77,11 @@ Route::middleware('auth:sanctum')->group(function () {
         '/subtitle-jobs/{subtitleJob}/download',
         [SubtitleController::class, 'download']
     );
+
+    Route::get(
+        '/subtitle-jobs/{subtitleJob}/export/{format}',
+        [SubtitleController::class, 'export']
+    )->whereIn('format', ['srt', 'vtt', 'txt', 'mp4']);
 
     Route::delete(
         '/subtitle-jobs/{subtitleJob}',

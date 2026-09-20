@@ -42,4 +42,8 @@ return [
         ),
     ],
 
+    'media' => [
+        'ffmpeg' => env('FFMPEG_BINARY', 'ffmpeg'),
+    ],
+
 ];

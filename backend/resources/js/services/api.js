@@ -9,7 +9,7 @@ api.interceptors.request.use(
 
         if (token) {
             config.headers.Authorization =
-                `Bearer ${token}`;
+                'Bearer ' + token;
         }
 
         return config;
@@ -24,7 +24,6 @@ api.interceptors.response.use(
             localStorage.removeItem('auth_token');
             localStorage.removeItem('auth_user');
 
-            // Redirect to login page automatically
             if (window.location.pathname !== '/login') {
                 window.location.href = '/login';
             }

@@ -160,10 +160,10 @@ class Transcriber:
                 f"(probability={info.language_probability:.2f})"
             )
 
-        # ── Step 2: No initial_prompt — avoids hallucinated loops ──────────────
-        # Setting an initial_prompt for Bengali (e.g. "বাংলা।") causes Whisper
-        # to enter a stuck-repetition loop which is then caught and dropped by
-        # _is_hallucinated(), producing 0 segments. No prompt is the safe default.
+        # ── Step 2: No initial_prompt needed ────────────────────────────────────
+        # The 'small' model (default) outputs Bengali/other scripts natively when
+        # language is set. Short prompts (e.g. "বাংলা।") cause the base model
+        # to produce hallucination loops, so no prompt is the safe approach.
 
         # ── Step 3: Full transcription with anti-hallucination guards ──────────
         segments_gen, _ = model.transcribe(
@@ -173,6 +173,9 @@ class Transcriber:
             vad_filter=True,
             vad_parameters=dict(min_silence_duration_ms=500),
             beam_size=5,
+            best_of=5,
+            patience=1.0,
+            repetition_penalty=1.05,
             # ── Anti-hallucination ───────────────────────────────────────────
             temperature=0,                    # deterministic — no random sampling
             condition_on_previous_text=False, # prevents cascading hallucination

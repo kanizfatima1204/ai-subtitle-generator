@@ -67,6 +67,8 @@ const aiLoading = ref(false);
 const aiResult = ref('');
 const aiAction = ref('');
 const aiError = ref('');
+const exportLoading = ref('');
+const exportError = ref('');
 
 /*
 |--------------------------------------------------------------------------
@@ -466,10 +468,17 @@ function deleteSubtitle() {
 */
 
 async function download() {
+    await exportFile('srt');
+}
+
+async function exportFile(format) {
+    exportLoading.value = format;
+    exportError.value = '';
+
     try {
         const response =
             await api.get(
-                `/api/subtitle-jobs/${props.job.id}/download`,
+                `/api/subtitle-jobs/${props.job.id}/export/${format}`,
                 {
                     responseType: 'blob',
                 }
@@ -479,8 +488,13 @@ async function download() {
             new Blob(
                 [response.data],
                 {
-                    type:
-                        'application/x-subrip',
+                    type: format === 'vtt'
+                        ? 'text/vtt'
+                        : format === 'txt'
+                            ? 'text/plain'
+                            : format === 'mp4'
+                                ? 'video/mp4'
+                                : 'application/x-subrip',
                 }
             );
 
@@ -510,7 +524,11 @@ async function download() {
                 );
 
         link.download =
-            `${filename || 'subtitles'}.srt`;
+            `${filename || 'subtitles'}${
+                format === 'mp4'
+                    ? '-captioned.mp4'
+                    : `.${format}`
+            }`;
 
         document.body.appendChild(
             link
@@ -523,9 +541,33 @@ async function download() {
         URL.revokeObjectURL(url);
     } catch (error) {
         console.error(
-            'Download failed:',
+            'Export failed:',
             error
         );
+
+        let message =
+            error.response?.data?.message;
+
+        if (
+            !message &&
+            error.response?.data instanceof Blob
+        ) {
+            try {
+                const body =
+                    await error.response.data.text();
+
+                message =
+                    JSON.parse(body)?.message;
+            } catch {
+                message = '';
+            }
+        }
+
+        exportError.value =
+            message ||
+            `Unable to export ${format.toUpperCase()}.`;
+    } finally {
+        exportLoading.value = '';
     }
 }
 
@@ -755,13 +797,50 @@ function statusLabel(status) {
                     <button
                         type="button"
                         @click="download"
-                        class="rounded-xl bg-cyan-400 px-3 py-2 text-xs font-semibold text-black transition hover:bg-cyan-300 sm:px-4"
+                        :disabled="!!exportLoading"
+                        class="rounded-xl bg-[#5fe7bd] px-3 py-2 text-xs font-semibold text-black shadow-[0_0_18px_rgba(95,231,189,0.3)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4"
                     >
-                        Export SRT
+                        {{ exportLoading === 'srt' ? 'Preparing...' : 'Export' }}
                     </button>
+
+                    <div class="group relative">
+                        <button
+                            type="button"
+                            :disabled="!!exportLoading"
+                            class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/75 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            Formats
+                            <span class="ml-1 text-white/40">⌄</span>
+                        </button>
+
+                        <div class="invisible absolute right-0 top-full z-50 mt-2 w-44 rounded-2xl border border-white/10 bg-[#111820] p-1 opacity-0 shadow-2xl transition group-hover:visible group-hover:opacity-100">
+                            <button
+                                v-for="format in ['srt', 'vtt', 'txt', 'mp4']"
+                                :key="format"
+                                type="button"
+                                :disabled="!!exportLoading"
+                                @click="exportFile(format)"
+                                class="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-xs text-white/70 transition hover:bg-[#5fe7bd]/10 hover:text-[#7df9d7] disabled:opacity-40"
+                            >
+                                <span>{{ format === 'mp4' ? 'Captioned MP4' : format.toUpperCase() }}</span>
+                                <span v-if="exportLoading === format" class="text-[#7df9d7]">...</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </header>
+
+        <div
+            v-if="exportError"
+            class="fixed right-5 top-20 z-50 max-w-sm rounded-2xl border border-red-300/20 bg-red-500/10 px-4 py-3 text-xs text-red-200 shadow-2xl backdrop-blur-xl"
+        >
+            <div class="flex items-start gap-3">
+                <span class="text-red-300">!</span>
+                <span class="flex-1">{{ exportError }}</span>
+                <button type="button" @click="exportError = ''" class="text-white/40 hover:text-white">×</button>
+            </div>
+        </div>
 
         <!-- ========================================================= -->
         <!-- Main -->

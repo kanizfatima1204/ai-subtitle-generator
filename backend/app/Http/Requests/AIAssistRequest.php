@@ -23,7 +23,23 @@ class AIAssistRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'text' => [
+                'required',
+                'string',
+                'max:5000',
+            ],
+
+            'action' => [
+                'required',
+                'string',
+                'in:improve,translate,grammar,simplify',
+            ],
+
+            'target_language' => [
+                'nullable',
+                'string',
+                'max:10',
+            ],
         ];
     }
 }

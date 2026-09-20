@@ -63,6 +63,56 @@ class SubtitleService
     }
 
     /**
+     * Generate WebVTT content for browser and editor integrations.
+     */
+    public function generateVtt(array $segments): string
+    {
+        $vtt = 'WEBVTT'.PHP_EOL.PHP_EOL;
+        $sequence = 1;
+
+        foreach ($segments as $segment) {
+            $text = trim((string) ($segment['text'] ?? ''));
+
+            if ($text === '') {
+                continue;
+            }
+
+            $start = max(0, (float) ($segment['start'] ?? 0));
+            $end = max($start + $this->minDuration, (float) ($segment['end'] ?? 0));
+
+            $vtt .= $sequence.PHP_EOL;
+            $vtt .= $this->formatWebVttTimestamp($start);
+            $vtt .= ' --> ';
+            $vtt .= $this->formatWebVttTimestamp($end);
+            $vtt .= PHP_EOL;
+            $vtt .= $this->formatSubtitleText($this->cleanText($text));
+            $vtt .= PHP_EOL.PHP_EOL;
+
+            $sequence++;
+        }
+
+        return $vtt;
+    }
+
+    /**
+     * Generate a plain-text transcript.
+     */
+    public function generateText(array $segments): string
+    {
+        $lines = [];
+
+        foreach ($segments as $segment) {
+            $text = trim((string) ($segment['text'] ?? ''));
+
+            if ($text !== '') {
+                $lines[] = $this->cleanText($text);
+            }
+        }
+
+        return implode(PHP_EOL, $lines).(count($lines) > 0 ? PHP_EOL : '');
+    }
+
+    /**
      * Process raw AI segments into subtitle-ready segments.
      *
      * This method is useful if Laravel receives raw Whisper
@@ -866,6 +916,18 @@ class SubtitleService
             $minutes,
             $wholeSeconds,
             $milliseconds
+        );
+    }
+
+    /**
+     * Convert seconds to WebVTT timestamp.
+     */
+    protected function formatWebVttTimestamp(float $seconds): string
+    {
+        return str_replace(
+            ',',
+            '.',
+            $this->formatTimestamp($seconds)
         );
     }
 }

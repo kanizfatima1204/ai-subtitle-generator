@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onUnmounted, ref, computed } from 'vue';
+import { onMounted, onUnmounted, ref, computed, nextTick } from 'vue';
 import { router } from '@inertiajs/vue3';
 
 import api from '../services/api';
@@ -21,9 +21,59 @@ const polling = ref(false);
 const pollTimer = ref(null);
 
 const showUploader = ref(false);
+const uploaderCard = ref(null);
 
 const selectedLanguage = ref('auto');
-const selectedModel = ref('base');
+const selectedModel = ref('small');
+
+const languages = [
+    { code: 'auto', name: 'Auto detect', native: 'Auto detect' },
+    { code: 'en', name: 'English', native: 'English' },
+    { code: 'bn', name: 'Bengali', native: 'বাংলা' },
+    { code: 'hi', name: 'Hindi', native: 'हिन्दी' },
+    { code: 'ur', name: 'Urdu', native: 'اردو' },
+    { code: 'ne', name: 'Nepali', native: 'नेपाली' },
+    { code: 'ta', name: 'Tamil', native: 'தமிழ்' },
+    { code: 'te', name: 'Telugu', native: 'తెలుగు' },
+    { code: 'ml', name: 'Malayalam', native: 'മലയാളം' },
+    { code: 'gu', name: 'Gujarati', native: 'ગુજરાતી' },
+    { code: 'pa', name: 'Punjabi', native: 'ਪੰਜਾਬੀ' },
+    { code: 'mr', name: 'Marathi', native: 'मराठी' },
+    { code: 'kn', name: 'Kannada', native: 'ಕನ್ನಡ' },
+    { code: 'as', name: 'Assamese', native: 'অসমীয়া' },
+    { code: 'ks', name: 'Kashmiri', native: 'कॉशुर' },
+    { code: 'or', name: 'Odia', native: 'ଓଡ଼ିଆ' },
+    { code: 'ps', name: 'Pashto', native: 'پښتو' },
+    { code: 'ar', name: 'Arabic', native: 'العربية' },
+    { code: 'fa', name: 'Persian', native: 'فارسی' },
+    { code: 'id', name: 'Indonesian', native: 'Bahasa Indonesia' },
+    { code: 'ms', name: 'Malay', native: 'Bahasa Melayu' },
+    { code: 'zh', name: 'Chinese', native: '中文' },
+    { code: 'ja', name: 'Japanese', native: '日本語' },
+    { code: 'ko', name: 'Korean', native: '한국어' },
+    { code: 'es', name: 'Spanish', native: 'Español' },
+    { code: 'fr', name: 'French', native: 'Français' },
+    { code: 'de', name: 'German', native: 'Deutsch' },
+    { code: 'pt', name: 'Portuguese', native: 'Português' },
+    { code: 'ru', name: 'Russian', native: 'Русский' },
+    { code: 'tr', name: 'Turkish', native: 'Türkçe' },
+    { code: 'it', name: 'Italian', native: 'Italiano' },
+];
+
+const selectedLanguageName = computed(() => {
+    return languages.find((language) => language.code === selectedLanguage.value)?.name || 'Auto detect';
+});
+
+function openUploader() {
+    showUploader.value = true;
+
+    nextTick(() => {
+        uploaderCard.value?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+        });
+    });
+}
 
 const user = ref(
     JSON.parse(localStorage.getItem('auth_user') || 'null')
@@ -743,93 +793,96 @@ function stopPolling() {
             v-if="!hasJob || showUploader"
             class="relative min-h-screen overflow-hidden px-4 py-8 md:px-8"
         >
-            <!-- Background glow -->
+            <div class="hero-grid absolute inset-0 opacity-60"></div>
+            <div class="pointer-events-none absolute inset-x-0 top-0 h-96 bg-gradient-to-b from-[#8b5cf6]/15 via-[#312e81]/5 to-transparent"></div>
+            <div class="pointer-events-none absolute -left-48 top-20 h-[520px] w-[520px] rounded-full bg-[#7c3aed]/15 blur-[150px]"></div>
+            <div class="pointer-events-none absolute -bottom-48 -right-32 h-[520px] w-[520px] rounded-full bg-[#fb7185]/10 blur-[150px]"></div>
 
-            <div
-                class="pointer-events-none absolute -left-40 -top-40 h-[500px] w-[500px] rounded-full bg-indigo-600/20 blur-[140px]"
-            ></div>
-
-            <div
-                class="pointer-events-none absolute -bottom-40 -right-40 h-[500px] w-[500px] rounded-full bg-purple-600/20 blur-[140px]"
-            ></div>
-
-            <div
-                class="relative mx-auto max-w-6xl"
-            >
-                <!-- Header -->
-
+            <div class="relative mx-auto max-w-6xl">
                 <header
-                    class="mb-8 flex items-center justify-between rounded-3xl border border-white/10 bg-white/[0.06] px-5 py-4 backdrop-blur-2xl"
+                    class="mx-auto mb-8 flex max-w-[1200px] items-center justify-between rounded-[24px] border border-white/10 bg-[#111321]/75 px-4 py-4 shadow-[0_20px_70px_rgba(5,5,20,0.65)] backdrop-blur-2xl md:px-6"
                 >
-                    <div
-                        class="flex items-center gap-3"
-                    >
-                        <div
-                            class="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-lg font-bold shadow-lg shadow-indigo-500/20"
-                        >
-                            ✦
+                    <div class="flex items-center gap-3">
+                        <div class="brand-mark flex h-11 w-11 items-center justify-center rounded-2xl border border-violet-300/20 bg-violet-400/10 text-base font-black text-violet-200 shadow-[0_0_22px_rgba(139,92,246,0.3)]">
+                            S
                         </div>
 
-                        <div>
-                            <h1
-                                class="font-bold text-white"
-                            >
-                                AI Subtitle Studio
+                        <div class="text-left">
+                            <h1 class="brand-word text-xl font-black leading-none tracking-[-0.04em] text-white md:text-2xl">
+                                Subtitle Lab
                             </h1>
-
-                            <p
-                                class="text-xs text-white/40"
-                            >
-                                Intelligent subtitle workspace
-                            </p>
+                            <p class="mt-1 text-[10px] uppercase tracking-[0.24em] text-violet-200/50">Turn speech into story</p>
                         </div>
                     </div>
 
-                    <div
-                        class="flex items-center gap-3"
-                    >
+                    <div class="flex items-center gap-3">
                         <a
                             href="/history"
-                            class="hidden rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/60 transition hover:bg-white/10 hover:text-white sm:block"
+                            class="hidden rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm font-semibold text-white/65 transition hover:border-violet-300/30 hover:bg-violet-400/10 hover:text-white sm:inline-flex"
                         >
                             History
                         </a>
 
                         <button
-                            @click="logout()"
-                            class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/60 transition hover:bg-white/10 hover:text-white"
+                            @click="openUploader"
+                            class="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-4 py-2.5 text-sm font-semibold text-white/80 transition hover:border-violet-300/30 hover:bg-violet-400/10 hover:text-white"
                         >
-                            Logout
+                            New project
+                            <span class="text-lg leading-none text-violet-300">+</span>
                         </button>
                     </div>
                 </header>
 
-                <!-- Upload Card -->
+                <div class="mx-auto max-w-5xl pt-4 text-center">
+                    <div class="mb-5 inline-flex items-center gap-2 rounded-full border border-violet-300/20 bg-violet-400/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.24em] text-violet-200">
+                        <span class="h-1.5 w-1.5 rounded-full bg-fuchsia-300 shadow-[0_0_10px_#f0abfc]"></span>
+                        Your ideas, perfectly timed
+                    </div>
+
+                    <h2 class="hero-title mx-auto max-w-[940px] text-4xl font-black leading-[0.94] tracking-[-0.06em] text-white md:text-[6vw] md:leading-[0.9]">
+                        Make every word<br />
+                        <span class="hero-gradient">feel the moment.</span>
+                    </h2>
+
+                    <p class="mx-auto mt-6 max-w-[780px] text-base leading-relaxed text-white/55 md:text-[1.25rem]">
+                        Generate clean, beautifully timed subtitles from any video or audio — then polish every line in one focused workspace.
+                    </p>
+
+                    <div class="mt-8 flex justify-center">
+                        <button
+                            class="hero-cta inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 px-8 py-4 text-lg font-bold text-white shadow-[0_0_36px_rgba(139,92,246,0.45)] transition hover:scale-[1.02] hover:shadow-[0_0_45px_rgba(217,70,239,0.45)]"
+                            @click="openUploader"
+                        >
+                            Start creating
+                            <span class="text-2xl leading-none">↗</span>
+                        </button>
+                    </div>
+
+                    <div class="mt-10 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-white/55">
+                        <span class="text-violet-200">✦</span>
+                        <span>Fast transcription</span>
+                        <span class="h-1 w-1 rounded-full bg-white/20"></span>
+                        <span>Word-level timing</span>
+                        <span class="h-1 w-1 rounded-full bg-white/20"></span>
+                        <span>SRT · VTT · MP4 exports</span>
+                    </div>
+                </div>
 
                 <div
-                    class="mx-auto max-w-3xl rounded-[32px] border border-white/10 bg-white/[0.06] p-5 shadow-2xl backdrop-blur-2xl md:p-8"
+                    ref="uploaderCard"
+                    class="mx-auto mt-12 max-w-4xl rounded-[32px] border border-white/10 bg-[#111321]/85 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.55)] backdrop-blur-2xl md:p-8"
                 >
-                    <div
-                        class="mb-8 text-center"
-                    >
-                        <div
-                            class="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 text-3xl"
-                        >
-                            ✦
+                    <div class="mb-8 text-center">
+                        <div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-fuchsia-300/20 bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 text-2xl text-fuchsia-200 shadow-[0_0_28px_rgba(217,70,239,0.2)]">
+                            ◈
                         </div>
 
-                        <h2
-                            class="text-2xl font-bold md:text-3xl"
-                        >
-                            Create AI Subtitles
-                        </h2>
+                        <h3 class="text-2xl font-bold md:text-3xl">
+                            Start a new subtitle project
+                        </h3>
 
-                        <p
-                            class="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-white/40"
-                        >
-                            Upload your video or audio and let
-                            AI automatically generate accurate
-                            subtitles with timestamps.
+                        <p class="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-white/45">
+                            Drop in your media, choose a language, and let the lab build a first cut you can make your own.
                         </p>
                     </div>
 
@@ -846,47 +899,34 @@ function stopPolling() {
                     >
                         <!-- Language -->
 
-                        <div>
+                        <div class="md:col-span-2">
                             <label
                                 class="mb-2 block text-xs font-medium uppercase tracking-wider text-white/40"
                             >
-                                Language
+                                Subtitle language
                             </label>
 
                             <select
                                 v-model="
                                     selectedLanguage
                                 "
-                                class="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none focus:border-indigo-400/50"
+                                class="w-full rounded-2xl border border-white/10 bg-[#0b0d18]/80 px-4 py-3 text-sm text-white outline-none transition focus:border-violet-400/50 focus:ring-2 focus:ring-violet-400/10"
                             >
                                 <option
-                                    value="auto"
+                                    v-for="language in languages"
+                                    :key="language.code"
+                                    :value="language.code"
                                     class="bg-[#101522]"
                                 >
-                                    Auto Detect
-                                </option>
-
-                                <option
-                                    value="bn"
-                                    class="bg-[#101522]"
-                                >
-                                    Bangla
-                                </option>
-
-                                <option
-                                    value="en"
-                                    class="bg-[#101522]"
-                                >
-                                    English
-                                </option>
-
-                                <option
-                                    value="mixed"
-                                    class="bg-[#101522]"
-                                >
-                                    Bangla + English
+                                    {{ language.name }} — {{ language.native }}
                                 </option>
                             </select>
+
+                            <p class="mt-2 text-xs text-white/35">
+                                {{ selectedLanguage === 'auto'
+                                    ? 'Whisper will detect the spoken language automatically.'
+                                    : `Captions will be generated in ${selectedLanguageName}.` }}
+                            </p>
                         </div>
 
                         <!-- Model -->
@@ -902,13 +942,13 @@ function stopPolling() {
                                 v-model="
                                     selectedModel
                                 "
-                                class="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none focus:border-indigo-400/50"
+                                class="w-full rounded-2xl border border-white/10 bg-[#0b0d18]/80 px-4 py-3 text-sm text-white outline-none transition focus:border-violet-400/50 focus:ring-2 focus:ring-violet-400/10"
                             >
                                 <option
                                     value="base"
                                     class="bg-[#101522]"
                                 >
-                                    Base — Recommended (Fast & Cloud-Optimized)
+                                    Base — Fast
                                 </option>
 
                                 <option
@@ -922,7 +962,7 @@ function stopPolling() {
                                     value="small"
                                     class="bg-[#101522]"
                                 >
-                                    Small — Higher Accuracy
+                                    Small — Recommended (Higher Accuracy)
                                 </option>
 
                                 <option
@@ -1059,6 +1099,7 @@ function stopPolling() {
                 :job="job"
                 :subtitles="subtitles"
                 :video-url="videoUrl"
+                :saving="saving"
                 @save="saveSubtitles"
                 @download="downloadSrt"
                 @add-subtitle="addSubtitle"
@@ -1070,3 +1111,41 @@ function stopPolling() {
         </div>
     </div>
 </template>
+
+<style scoped>
+    .hero-grid {
+        background-image:
+            linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+        background-size: 42px 42px;
+        mask-image: radial-gradient(circle at center, black 30%, transparent 100%);
+    }
+
+    .brand-word {
+        font-family: "Arial Black", "Segoe UI", sans-serif;
+        text-shadow: 0 0 20px rgba(167, 139, 250, 0.2);
+    }
+
+    .brand-mark {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(244, 114, 182, 0.08));
+    }
+
+    .hero-title {
+        text-shadow: 0 0 35px rgba(167, 139, 250, 0.18);
+    }
+
+    .hero-gradient {
+        background: linear-gradient(100deg, #c4b5fd 0%, #f0abfc 48%, #fda4af 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .hero-cta {
+        min-width: min(100%, 420px);
+    }
+
+    .google-mark {
+        font-family: "Arial", sans-serif;
+    }
+</style>
