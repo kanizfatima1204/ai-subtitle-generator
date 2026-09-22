@@ -9,7 +9,9 @@ Route::get('/health-check', function () {
     $aiHealth = null;
     $aiError = null;
     try {
-        $res = Http::timeout(5)->get('http://127.0.0.1:8001/health');
+        $res = Http::timeout(5)->get(
+            rtrim(config('services.ai.url'), '/').'/health'
+        );
         $aiHealth = $res->json();
     } catch (Throwable $e) {
         $aiError = $e->getMessage();

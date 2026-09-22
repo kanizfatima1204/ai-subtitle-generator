@@ -39,7 +39,10 @@ return [
             'connection' => env('DB_QUEUE_CONNECTION'),
             'table' => env('DB_QUEUE_TABLE', 'jobs'),
             'queue' => env('DB_QUEUE', 'default'),
-            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 90),
+            // Subtitle transcription can run for up to one hour. Keep the
+            // reservation longer than the job timeout so it is not picked up
+            // by a second worker while the original job is still running.
+            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 3900),
             'after_commit' => false,
         ],
 

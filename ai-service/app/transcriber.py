@@ -55,6 +55,27 @@ def _is_hallucinated(text: str) -> bool:
     return False
 
 
+def _script_mismatch(text: str, language: str) -> bool:
+    """Return True when decoded characters do not match the detected language."""
+    letters = [char for char in text if char.isalpha()]
+    if not letters:
+        return False
+
+    def ratio(start: int, end: int) -> float:
+        return sum(start <= ord(char) <= end for char in letters) / len(letters)
+
+    if language == "bn":
+        return ratio(0x0980, 0x09FF) < 0.35
+
+    if language in {"hi", "mr", "ne", "sa"}:
+        return ratio(0x0900, 0x097F) < 0.35
+
+    if language in {"en", "de", "es", "fr", "it", "pt", "nl"}:
+        return ratio(0x0041, 0x024F) < 0.35
+
+    return False
+
+
 class Transcriber:
     """
     High-performance transcription pipeline supporting both faster-whisper
@@ -169,6 +190,7 @@ class Transcriber:
         segments_gen, _ = model.transcribe(
             file_path,
             language=detected_language if detected_language != "unknown" else None,
+            task="transcribe",
             word_timestamps=True,
             vad_filter=True,
             vad_parameters=dict(min_silence_duration_ms=500),
@@ -178,7 +200,10 @@ class Transcriber:
             repetition_penalty=1.05,
             # ── Anti-hallucination ───────────────────────────────────────────
             temperature=0,                    # deterministic — no random sampling
-            condition_on_previous_text=False, # prevents cascading hallucination
+            # Keep context when the user selected a language. Without it,
+            # short Bengali VAD chunks are decoded independently and often
+            # become plausible but incorrect phrases.
+            condition_on_previous_text=language is not None,
             no_speech_threshold=0.6,          # drop silent / non-speech windows
             compression_ratio_threshold=2.4,  # default — avoids false positives
             log_prob_threshold=-1.0,          # drop low-confidence segments
@@ -226,6 +251,27 @@ class Transcriber:
                 "words": words,
             })
 
+        if (
+            language is None
+            and detected_language != "unknown"
+            and formatted_segments
+        ):
+            decoded_text = " ".join(
+                segment["text"] for segment in formatted_segments
+            )
+
+            if _script_mismatch(decoded_text, detected_language):
+                logger.warning(
+                    "Detected language %s does not match decoded script; "
+                    "retrying with English.",
+                    detected_language,
+                )
+                return self._transcribe_faster_whisper(
+                    model,
+                    file_path,
+                    "en",
+                )
+
         return {
             "language": detected_language,
             "segments": formatted_segments,
@@ -237,7 +283,12 @@ class Transcriber:
         language: str | None,
     ) -> dict[str, Any]:
         audio = whisperx.load_audio(file_path)
-        result = self.model.transcribe(audio, language=language, batch_size=8)
+        result = self.model.transcribe(
+            audio,
+            language=language,
+            task="transcribe",
+            batch_size=8,
+        )
         detected_language = result.get("language") or language or "unknown"
 
         # Attempt alignment

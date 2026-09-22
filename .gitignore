@@ -10,6 +10,7 @@ __pycache__/
 ai-service/venv/
 ai-service/storage/uploads/*
 !ai-service/storage/uploads/.gitkeep
+ai-service/storage/*.log
 
 # Sample media files (keep repo clean)
 sample_*.mp3
@@ -32,6 +33,7 @@ backend/storage/framework/views/*
 !backend/storage/framework/views/.gitkeep
 backend/storage/logs/*
 !backend/storage/logs/.gitkeep
+backend/storage/*.log
 backend/database/database.sqlite
 backend/database/database.sqlite-shm
 backend/database/database.sqlite-wal

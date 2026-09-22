@@ -119,6 +119,8 @@ class ProfessionalSubtitleProcessor:
 
             if segment_words:
 
+                parsed_words = []
+
                 for item in segment_words:
 
                     text = (
@@ -138,19 +140,43 @@ class ProfessionalSubtitleProcessor:
                     if (
                         not text
                         or start is None
-                        or end is None
                     ):
                         continue
 
                     start = float(start)
-                    end = float(end)
+                    parsed_words.append(
+                        {
+                            "text": text,
+                            "start": start,
+                            "end": (
+                                float(end)
+                                if end is not None
+                                else start
+                            ),
+                        }
+                    )
+
+                for index, item in enumerate(parsed_words):
+                    start = item["start"]
+                    end = item["end"]
 
                     if end <= start:
-                        continue
+                        next_start = next(
+                            (
+                                candidate["start"]
+                                for candidate in parsed_words[index + 1:]
+                                if candidate["start"] > start
+                            ),
+                            start + 0.05,
+                        )
+                        end = max(
+                            start + 0.05,
+                            min(next_start, start + 0.25),
+                        )
 
                     words.append(
                         Word(
-                            text=text,
+                            text=item["text"],
                             start=start,
                             end=end,
                         )

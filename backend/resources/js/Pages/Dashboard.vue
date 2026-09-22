@@ -169,10 +169,6 @@ async function handleUpload(file) {
             '/api/subtitle-jobs',
             formData,
             {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-
                 timeout: 120000,
             }
         );

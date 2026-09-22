@@ -28,7 +28,12 @@ class ProcessSubtitleJob implements ShouldQueue
     /**
      * Number of attempts.
      */
-    public int $tries = 2;
+    public int $tries = 5;
+
+    /**
+     * Delay before retrying a failed queue attempt.
+     */
+    public array $backoff = [15, 30, 60, 120];
 
     /**
      * Subtitle job ID.
@@ -126,7 +131,12 @@ class ProcessSubtitleJob implements ShouldQueue
              |--------------------------------------------------------------------------
              */
 
-            $response = Http::timeout(3600)
+            $response = Http::retry(
+                3,
+                5000,
+                throw: false
+            )
+                ->timeout(3600)
                 ->connectTimeout(120)
                 ->attach(
                     'file',

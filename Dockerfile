@@ -73,7 +73,7 @@ COPY . /app
 WORKDIR /app/backend
 
 # Configure PHP runtime settings (uploads, memory limits, timeouts)
-RUN echo "upload_max_filesize = 256M\npost_max_size = 256M\nmemory_limit = 512M\nmax_execution_time = 3600" > /usr/local/etc/php/conf.d/custom.ini
+RUN echo "upload_max_filesize = 512M\npost_max_size = 512M\nmemory_limit = 512M\nmax_execution_time = 3600" > /usr/local/etc/php/conf.d/custom.ini
 
 # Install Composer dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction

@@ -37,7 +37,10 @@ return [
             'database' => env('DB_DATABASE', database_path('database.sqlite')),
             'prefix' => '',
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
-            'busy_timeout' => env('DB_BUSY_TIMEOUT', 10000),
+            // Queue reservation and subtitle processing can overlap with
+            // web requests on local SQLite. Wait for the writer instead of
+            // failing immediately with "database is locked".
+            'busy_timeout' => (int) env('DB_BUSY_TIMEOUT', 60000),
             'journal_mode' => env('DB_JOURNAL_MODE', 'WAL'),
             'synchronous' => env('DB_SYNCHRONOUS', 'NORMAL'),
         ],
