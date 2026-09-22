@@ -200,10 +200,11 @@ class Transcriber:
             repetition_penalty=1.05,
             # ── Anti-hallucination ───────────────────────────────────────────
             temperature=0,                    # deterministic — no random sampling
-            # Keep context when the user selected a language. Without it,
-            # short Bengali VAD chunks are decoded independently and often
-            # become plausible but incorrect phrases.
-            condition_on_previous_text=language is not None,
+            # Once the language is known, retain context across VAD chunks.
+            # Auto-detected Bengali was previously decoded as independent
+            # chunks, which can make Whisper emit an English translation even
+            # though language detection correctly returned "bn".
+            condition_on_previous_text=True,
             no_speech_threshold=0.6,          # drop silent / non-speech windows
             compression_ratio_threshold=2.4,  # default — avoids false positives
             log_prob_threshold=-1.0,          # drop low-confidence segments
@@ -251,25 +252,17 @@ class Transcriber:
                 "words": words,
             })
 
-        if (
-            language is None
-            and detected_language != "unknown"
-            and formatted_segments
-        ):
+        if detected_language != "unknown" and formatted_segments:
             decoded_text = " ".join(
                 segment["text"] for segment in formatted_segments
             )
 
             if _script_mismatch(decoded_text, detected_language):
                 logger.warning(
-                    "Detected language %s does not match decoded script; "
-                    "retrying with English.",
+                    "Detected language %s does not match decoded script. "
+                    "Keeping the detected language instead of translating "
+                    "captions to English.",
                     detected_language,
-                )
-                return self._transcribe_faster_whisper(
-                    model,
-                    file_path,
-                    "en",
                 )
 
         return {
