@@ -181,6 +181,27 @@ class Transcriber:
                 f"(probability={info.language_probability:.2f})"
             )
 
+            if detected_language in {"bn", "hi"}:
+                # Bengali and Hindi are similar enough that Whisper's first
+                # language-ID pass can confuse them. Score a forced decode in
+                # both languages, then use the language the audio supports
+                # best instead of emitting Hindi solely from the first guess.
+                scores = {
+                    candidate: self._language_confidence(
+                        model,
+                        file_path,
+                        candidate,
+                    )
+                    for candidate in ("bn", "hi")
+                }
+                detected_language = max(scores, key=scores.get)
+                logger.info(
+                    "Bengali/Hindi confidence comparison: bn=%.3f, hi=%.3f; selected %s",
+                    scores["bn"],
+                    scores["hi"],
+                    detected_language,
+                )
+
         # ── Step 2: No initial_prompt needed ────────────────────────────────────
         # The 'small' model (default) outputs Bengali/other scripts natively when
         # language is set. Short prompts (e.g. "বাংলা।") cause the base model
@@ -269,6 +290,44 @@ class Transcriber:
             "language": detected_language,
             "segments": formatted_segments,
         }
+
+    def _language_confidence(
+        self,
+        model: WhisperModel,
+        file_path: str,
+        language: str,
+    ) -> float:
+        """Return Whisper's average confidence for a forced language decode."""
+        segments, _ = model.transcribe(
+            file_path,
+            language=language,
+            task="transcribe",
+            vad_filter=True,
+            vad_parameters=dict(min_silence_duration_ms=500),
+            beam_size=5,
+            best_of=5,
+            temperature=0,
+            condition_on_previous_text=True,
+            no_speech_threshold=0.6,
+            compression_ratio_threshold=2.4,
+            log_prob_threshold=-1.0,
+        )
+
+        total = 0.0
+        weight = 0
+        for segment in segments:
+            text = segment.text.strip()
+            if not text or _is_hallucinated(text):
+                continue
+
+            segment_weight = max(len(text), 1)
+            total += (
+                float(getattr(segment, "avg_logprob", -10.0))
+                * segment_weight
+            )
+            weight += segment_weight
+
+        return total / weight if weight else float("-inf")
 
     def _transcribe_whisperx(
         self,
