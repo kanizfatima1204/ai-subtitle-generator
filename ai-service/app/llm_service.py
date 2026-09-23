@@ -99,6 +99,7 @@ Rules:
 - Preserve the exact meaning.
 - Keep names and numbers accurate.
 - Keep the result natural for spoken dialogue.
+- When translating into Bangla, write Bengali words in Bengali script (বাংলা লিপি), not Devanagari or Latin transliteration.
 - Do not explain the translation.
 - Return only the translated subtitle.
 """

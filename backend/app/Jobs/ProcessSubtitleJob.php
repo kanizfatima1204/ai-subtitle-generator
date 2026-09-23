@@ -112,9 +112,14 @@ class ProcessSubtitleJob implements ShouldQueue
 
             $language = $job->language;
 
+            $targetLanguage = $language === 'bn'
+                ? 'bn'
+                : null;
+
             if (
                 empty($language) ||
-                $language === 'auto'
+                $language === 'auto' ||
+                $targetLanguage !== null
             ) {
                 $language = null;
             }
@@ -147,6 +152,7 @@ class ProcessSubtitleJob implements ShouldQueue
                     $aiServiceUrl.'/transcribe',
                     array_filter([
                         'language' => $language,
+                        'target_language' => $targetLanguage,
                         'model' => $job->model ?? 'base',
                     ], fn ($value) => $value !== null)
                 );

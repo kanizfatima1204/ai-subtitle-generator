@@ -921,6 +921,8 @@ function stopPolling() {
                             <p class="mt-2 text-xs text-white/35">
                                 {{ selectedLanguage === 'auto'
                                     ? 'Whisper will detect the spoken language automatically.'
+                                    : selectedLanguage === 'bn'
+                                        ? 'Speech is detected automatically, then captions are translated into Bangla.'
                                     : `Captions will be generated in ${selectedLanguageName}.` }}
                             </p>
                         </div>

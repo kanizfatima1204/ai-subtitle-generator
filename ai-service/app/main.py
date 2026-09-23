@@ -102,6 +102,7 @@ async def health():
 async def transcribe(
     file: UploadFile = File(...),
     language: str | None = Form(None),
+    target_language: str | None = Form(None),
     model: str = Form("base"),
 ):
 
@@ -162,9 +163,28 @@ async def transcribe(
             )
         )
 
+        detected_language = result.get("language")
+        if (
+            target_language == "bn"
+            and detected_language != "bn"
+        ):
+            subtitles = [
+                {
+                    **subtitle,
+                    "text": await llm_service.translate(
+                        subtitle["text"],
+                        target_language,
+                    ),
+                }
+                for subtitle in subtitles
+            ]
+
         return {
             "language":
-                result.get("language"),
+                target_language or detected_language,
+
+            "source_language":
+                detected_language,
 
             "segments":
                 result.get(
