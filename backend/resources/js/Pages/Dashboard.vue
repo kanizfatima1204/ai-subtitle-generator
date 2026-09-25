@@ -5,6 +5,7 @@ import { router } from '@inertiajs/vue3';
 import api from '../services/api';
 import FileUploader from '../Components/FileUploader.vue';
 import SubtitleWorkspace from '../Components/SubtitleWorkspace.vue';
+import LanguagePicker from '../Components/LanguagePicker.vue';
 
 
 const job = ref(null);
@@ -12,6 +13,8 @@ const subtitles = ref([]);
 
 const loading = ref(false);
 const uploading = ref(false);
+const pickedFile = ref(null);
+const previewUrl = ref('');
 const saving = ref(false);
 
 const error = ref('');
@@ -146,6 +149,14 @@ async function handleUpload(file) {
         return;
     }
 
+    pickedFile.value = file;
+    previewUrl.value = URL.createObjectURL(file);
+}
+
+async function startUpload() {
+    const file = pickedFile.value;
+    if (!file) return;
+
     error.value = '';
     success.value = '';
     uploading.value = true;
@@ -174,6 +185,9 @@ async function handleUpload(file) {
         );
 
         job.value = response.data.job;
+        pickedFile.value = null;
+        URL.revokeObjectURL(previewUrl.value);
+        previewUrl.value = '';
 
         subtitles.value = [];
 
@@ -781,12 +795,22 @@ function stopPolling() {
 
 <template>
     <div class="min-h-screen bg-[#080b14]">
+        <LanguagePicker
+            v-if="pickedFile"
+            :file="pickedFile"
+            :preview-url="previewUrl"
+            :languages="languages"
+            v-model="selectedLanguage"
+            :loading="uploading"
+            @back="pickedFile = null; URL.revokeObjectURL(previewUrl); previewUrl = ''"
+            @start="startUpload"
+        />
         <!-- ========================================================= -->
         <!-- UPLOAD SCREEN                                             -->
         <!-- ========================================================= -->
 
         <div
-            v-if="!hasJob || showUploader"
+            v-else-if="!hasJob || showUploader"
             class="relative min-h-screen overflow-hidden px-4 py-8 md:px-8"
         >
             <div class="hero-grid absolute inset-0 opacity-60"></div>
