@@ -63,8 +63,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
         httpx \
         python-dotenv
 
-# Pre-download lightweight models (base & tiny & small) at build time so runtime has zero download latency and no OOM crashes
-RUN python3 -c "from faster_whisper import WhisperModel; WhisperModel('tiny', device='cpu', compute_type='int8'); WhisperModel('base', device='cpu', compute_type='int8'); WhisperModel('small', device='cpu', compute_type='int8')"
+# Pre-download models at build time so runtime has zero download latency.
+# 'medium' is required for accurate Bengali vs Hindi language separation.
+RUN python3 -c "from faster_whisper import WhisperModel; WhisperModel('tiny', device='cpu', compute_type='int8'); WhisperModel('base', device='cpu', compute_type='int8'); WhisperModel('small', device='cpu', compute_type='int8'); WhisperModel('medium', device='cpu', compute_type='int8')"
 
 # Copy entire repository into the container
 COPY . /app

@@ -164,10 +164,8 @@ async def transcribe(
         )
 
         detected_language = result.get("language")
-        if (
-            target_language == "bn"
-            and detected_language != "bn"
-        ):
+
+        if target_language and detected_language != target_language:
             subtitles = [
                 {
                     **subtitle,

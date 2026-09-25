@@ -106,21 +106,22 @@ class ProcessSubtitleJob implements ShouldQueue
             | 4. Prepare language
             |--------------------------------------------------------------------------
             |
-            | auto = let Whisper detect language.
+            | auto → let Whisper detect the source language.
+            | bn   → detect the source language, then translate captions
+            |        into Bengali in the AI service.
+            | other → transcribe the selected source language.
             |
             */
 
             $language = $job->language;
 
-            $targetLanguage = $language === 'bn'
-                ? 'bn'
-                : null;
+            $targetLanguage = null;
 
-            if (
-                empty($language) ||
-                $language === 'auto' ||
-                $targetLanguage !== null
-            ) {
+            // Bengali is a requested output language, not a source language.
+            if ($language === 'bn') {
+                $targetLanguage = 'bn';
+                $language = null;
+            } elseif (empty($language) || $language === 'auto') {
                 $language = null;
             }
 
