@@ -137,12 +137,9 @@ class ProcessSubtitleJob implements ShouldQueue
              |--------------------------------------------------------------------------
              */
 
-            $response = Http::retry(
-                3,
-                5000,
-                throw: false
-            )
-                ->timeout(3600)
+            // Build a fresh request for each queue attempt. Retrying this
+            // request reuses the uploaded file stream after Guzzle closes it.
+            $response = Http::timeout(3600)
                 ->connectTimeout(120)
                 ->attach(
                     'file',
@@ -164,7 +161,17 @@ class ProcessSubtitleJob implements ShouldQueue
             |--------------------------------------------------------------------------
             */
 
-            $response->throw();
+            if ($response->failed()) {
+                $detail = $response->json('detail');
+
+                if (is_string($detail) && $detail !== '') {
+                    throw new \RuntimeException(
+                        'AI service error: '.$detail
+                    );
+                }
+
+                $response->throw();
+            }
 
             $result = $response->json();
 

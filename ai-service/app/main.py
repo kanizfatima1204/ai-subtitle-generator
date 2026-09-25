@@ -6,6 +6,7 @@ from fastapi import (
     FastAPI,
     File,
     Form,
+    HTTPException,
     UploadFile,
 )
 
@@ -166,6 +167,15 @@ async def transcribe(
         detected_language = result.get("language")
 
         if target_language and detected_language != target_language:
+            if not llm_service.api_key:
+                raise HTTPException(
+                    status_code=503,
+                    detail=(
+                        "Bangla translation is unavailable: configure "
+                        "LLM_API_KEY on the AI service."
+                    ),
+                )
+
             subtitles = [
                 {
                     **subtitle,
